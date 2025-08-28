@@ -1,16 +1,16 @@
 # Roles
 
 ## prompts
-- show all roles
+- show all roles of content type "ipam.addresses"
 ## query
 
     query Roles(
         $get_id: Boolean = false,
         $get_name: Boolean = false,
         $get_model: Boolean = false,
-        $name_filter: [String]
+        $field_value: [String]
     ) {
-    roles(name: $name_filter) {
+    roles(enter_name_of_field_here: field_value) {
         id @include(if: $get_id)
         name @include(if: $get_name)
         content_types {
