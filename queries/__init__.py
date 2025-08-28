@@ -30,7 +30,8 @@ from .metadata import (
 )
 
 from .ipam import (
-    IPAddressesCustomizedQuery
+    IPAddressesCustomizedQuery,
+    IPAddressesFilteredQuery
 )
 
 class QueryRegistry:
@@ -58,6 +59,7 @@ class QueryRegistry:
             
             # IPAM queries
             IPAddressesCustomizedQuery,
+            IPAddressesFilteredQuery,
             
             # Metadata queries
             GetRolesQuery,
