@@ -79,6 +79,17 @@ async def list_prompts() -> list:
                     required=True
                 )
             ]
+        ),
+        Prompt(
+            name="show-devices-in-location",
+            description="Show the name and IP address of all devices in a specific location",
+            arguments=[
+                PromptArgument(
+                    name="location_name",
+                    description="Name of the location to query",
+                    required=True
+                )
+            ]
         )
     ]
 
@@ -88,6 +99,9 @@ async def get_prompt(name: str, arguments: dict) -> str:
     if name == "show-device-details":
         device_name = arguments.get("device_name", "{device_name}")
         return f"show all properties of device {device_name}"
+    elif name == "show-devices-in-location":
+        location_name = arguments.get("location_name", "{location_name}")
+        return f"show the name and the IP address of all devices in location {location_name}"
     
     raise ValueError(f"Unknown prompt: {name}")
 

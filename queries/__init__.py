@@ -21,6 +21,10 @@ from .statuses import (
     DynamicStatusQuery
 )
 
+from .roles import (
+    DynamicRoleQuery
+)
+
 from .metadata import (
     GetRolesQuery,
     GetTagsQuery,
@@ -50,6 +54,9 @@ class QueryRegistry:
             
             # Status queries
             DynamicStatusQuery,
+            
+            # Role queries
+            DynamicRoleQuery,
             
             # IPAM queries
             IPAddressesCustomizedQuery,

@@ -53,6 +53,9 @@ class DevicePromptParser:
         'serial': ['get_serial'],
         'asset_tag': ['get_asset_tag'],
         'ip': ['get_primary_ip4'],
+        'ip address': ['get_primary_ip4'],
+        'ip_address': ['get_primary_ip4'],
+        'primary ip': ['get_primary_ip4'],
         'interface': ['get_interfaces']
     }
     
@@ -64,6 +67,7 @@ class DevicePromptParser:
         - "show device router1" -> {'variable_name': 'name', 'variable_value': ['router1']}
         - "show all devices in location datacenter1" -> {'variable_name': 'location', 'variable_value': ['datacenter1']}
         - "devices with role firewall" -> {'variable_name': 'role', 'variable_value': ['firewall']}
+        - "show the name and the IP address of all devices in location lab" -> {'variable_name': 'location', 'variable_value': ['lab'], 'get_name': True, 'get_primary_ip4': True}
         """
         prompt_lower = prompt.lower().strip()
         
