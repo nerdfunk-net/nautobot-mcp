@@ -10,17 +10,7 @@ from .base import BaseQuery
 
 # Import all query modules
 from .devices import (
-    DevicesByNameQuery,
-    DevicesByLocationQuery,
-    DevicesByRoleQuery, 
-    DevicesByTagQuery,
-    DevicesByDeviceTypeQuery,
-    DevicesByManufacturerQuery,
-    DevicesByPlatformQuery,
-    DeviceInterfacesQuery,
-    DevicesCustomizedQuery,
-    DeviceBasicDetailsQuery,
-    TestMinimalQuery
+    DynamicDeviceQuery
 )
 
 from .metadata import (
@@ -45,17 +35,7 @@ class QueryRegistry:
         """Initialize and register all available queries"""
         query_classes = [
             # Device queries
-            DevicesByNameQuery,
-            DevicesByLocationQuery,
-            DevicesByRoleQuery,
-            DevicesByTagQuery,
-            DevicesByDeviceTypeQuery,
-            DevicesByManufacturerQuery,
-            DevicesByPlatformQuery,
-            DeviceInterfacesQuery,
-            DevicesCustomizedQuery,
-            DeviceBasicDetailsQuery,
-            TestMinimalQuery,
+            DynamicDeviceQuery,
             
             # IPAM queries
             IPAddressesCustomizedQuery,

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Refactored Nautobot MCP Server with modular query system
+Nautobot MCP Server with modular query system
 
 This version uses a modular query registry system that makes it easy to add new queries
 without modifying the core server code.
