@@ -12,7 +12,7 @@ import logging
 from typing import List
 
 from mcp.server import Server
-from mcp.types import Tool, TextContent
+from mcp.types import Tool, TextContent, Prompt, PromptArgument
 
 from nautobot_client import NautobotClient
 from queries import get_all_queries, get_query
@@ -67,8 +67,29 @@ async def list_resources() -> list:
 
 @app.list_prompts()
 async def list_prompts() -> list:
-    """List available prompts (none for this server)"""
-    return []
+    """List available prompt templates"""
+    return [
+        Prompt(
+            name="show-device-details",
+            description="Show all properties of a specific device",
+            arguments=[
+                PromptArgument(
+                    name="device_name",
+                    description="Name of the device to query",
+                    required=True
+                )
+            ]
+        )
+    ]
+
+@app.get_prompt()
+async def get_prompt(name: str, arguments: dict) -> str:
+    """Generate prompt content based on template and arguments"""
+    if name == "show-device-details":
+        device_name = arguments.get("device_name", "{device_name}")
+        return f"show all properties of device {device_name}"
+    
+    raise ValueError(f"Unknown prompt: {name}")
 
 @app.call_tool()
 async def call_tool(name: str, arguments: dict) -> List[TextContent]:
