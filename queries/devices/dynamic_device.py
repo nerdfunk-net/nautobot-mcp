@@ -416,6 +416,14 @@ class DynamicDeviceQuery(BaseQuery):
         result_query = result_query.replace('$variable_value: [String],\n    )', '$variable_value: [String]\n    )')
         return result_query
     
+    def _remove_filtering(self, query: str) -> str:
+        """Remove the filtering clause from the query to fetch all records"""
+        # Replace the filtered query with an unfiltered one
+        query = query.replace("devices(enter_variable_name_here: $variable_value)", "devices")
+        # Remove the variable declaration
+        query = query.replace("$variable_value: [String],", "")
+        return query
+    
     def _execute_graphql(self, client, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Execute GraphQL query with dynamic variable replacement"""
         
@@ -427,34 +435,45 @@ class DynamicDeviceQuery(BaseQuery):
                 if key not in arguments or arguments[key] is None:
                     arguments[key] = value
         
-        # Get the variable name and value (either from prompt parsing or manual input)
-        variable_name = arguments.get("variable_name")
-        variable_value = arguments.get("variable_value")
-        
-        if not variable_name or not variable_value:
-            raise ValueError("Either 'prompt' or both 'variable_name' and 'variable_value' must be provided")
-        
-        # Get interface parameters
-        interface_variable = arguments.get("interface_variable")
-        interface_value = arguments.get("interface_value")
-        
-        # Start with the base query
-        query = self.base_query
-        
-        # Replace the main variable placeholder
-        query = query.replace("enter_variable_name_here", variable_name)
-        
-        # Handle interface parameters
-        if interface_variable and interface_value:
-            # Replace interface placeholder
-            query = query.replace("enter_interface_var_here", interface_variable)
-        else:
-            # Remove the entire interface section if not needed
+        # Check if this is a "show all" query
+        if arguments.get("show_all"):
+            query = self._remove_filtering(self.base_query)
+            # Remove interface section since we're showing all devices
             query = self._remove_interface_section(query)
-            # Remove get_interfaces from arguments when not using interfaces
-            if 'get_interfaces' in arguments:
-                arguments = arguments.copy()
-                del arguments['get_interfaces']
+            # Remove unnecessary arguments
+            filtered_args = {k: v for k, v in arguments.items() 
+                           if k not in ["variable_value", "variable_name", "show_all", "interface_variable", "interface_value", "get_interfaces"]}
+        else:
+            # Get the variable name and value (either from prompt parsing or manual input)
+            variable_name = arguments.get("variable_name")
+            variable_value = arguments.get("variable_value")
+            
+            if not variable_name or not variable_value:
+                raise ValueError("Either 'prompt' or both 'variable_name' and 'variable_value' must be provided")
+            
+            # Get interface parameters
+            interface_variable = arguments.get("interface_variable")
+            interface_value = arguments.get("interface_value")
+            
+            # Start with the base query
+            query = self.base_query
+            
+            # Replace the main variable placeholder
+            query = query.replace("enter_variable_name_here", variable_name)
+            
+            # Handle interface parameters
+            if interface_variable and interface_value:
+                # Replace interface placeholder
+                query = query.replace("enter_interface_var_here", interface_variable)
+            else:
+                # Remove the entire interface section if not needed
+                query = self._remove_interface_section(query)
+                # Remove get_interfaces from arguments when not using interfaces
+                if 'get_interfaces' in arguments:
+                    arguments = arguments.copy()
+                    del arguments['get_interfaces']
+            
+            filtered_args = arguments
         
         # Log the complete query for debugging
         logger.info("=" * 80)
@@ -463,7 +482,7 @@ class DynamicDeviceQuery(BaseQuery):
         logger.info(query)
         logger.info("=" * 80)
         logger.info("WITH ARGUMENTS:")
-        logger.info(arguments)
+        logger.info(filtered_args)
         logger.info("=" * 80)
         
-        return client.graphql_query(query, arguments)
+        return client.graphql_query(query, filtered_args)

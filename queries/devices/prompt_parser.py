@@ -73,8 +73,11 @@ class DevicePromptParser:
         # Parse main device filter
         variable_name, variable_value = self._extract_main_filter(prompt_lower)
         if variable_name and variable_value:
-            result['variable_name'] = variable_name
-            result['variable_value'] = variable_value
+            if variable_name == 'show_all':
+                result['show_all'] = True
+            else:
+                result['variable_name'] = variable_name
+                result['variable_value'] = variable_value
             
         # Parse interface filter if present
         interface_var, interface_val = self._extract_interface_filter(prompt_lower)
@@ -90,6 +93,13 @@ class DevicePromptParser:
     
     def _extract_main_filter(self, prompt: str) -> Tuple[Optional[str], Optional[List[str]]]:
         """Extract the main device filter from prompt"""
+        
+        # Check for "show all" patterns first
+        if ("show all devices" in prompt or 
+            "list all devices" in prompt or 
+            "get all devices" in prompt or
+            prompt in ["all devices", "devices"]):
+            return 'show_all', ['true']  # Special marker for show all
         
         # Pattern: "show device <name>" or "show all properties of device <name>"
         device_name_match = re.search(r'(?:show|get|find)(?:\s+all\s+properties\s+of)?\s+device\s+(\w+)', prompt)

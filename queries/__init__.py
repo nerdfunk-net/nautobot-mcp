@@ -13,6 +13,14 @@ from .devices import (
     DynamicDeviceQuery
 )
 
+from .locations import (
+    DynamicLocationQuery
+)
+
+from .statuses import (
+    DynamicStatusQuery
+)
+
 from .metadata import (
     GetRolesQuery,
     GetTagsQuery,
@@ -36,6 +44,12 @@ class QueryRegistry:
         query_classes = [
             # Device queries
             DynamicDeviceQuery,
+            
+            # Location queries
+            DynamicLocationQuery,
+            
+            # Status queries
+            DynamicStatusQuery,
             
             # IPAM queries
             IPAddressesCustomizedQuery,
