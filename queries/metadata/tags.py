@@ -4,6 +4,7 @@ Get tags query module
 
 from ..base import SimpleGraphQLQuery
 
+
 class GetTagsQuery(SimpleGraphQLQuery):
     def __init__(self):
         query = """
@@ -12,7 +13,7 @@ class GetTagsQuery(SimpleGraphQLQuery):
                     name
                 }
             }"""
-        
+
         super().__init__(
             tool_name="get_tags",
             description="Get available tags",
@@ -22,7 +23,7 @@ class GetTagsQuery(SimpleGraphQLQuery):
                 "tags_filter": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Optional filter for specific tag content types"
+                    "description": "Optional filter for specific tag content types",
                 }
-            }
+            },
         )

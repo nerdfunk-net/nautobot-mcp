@@ -10,50 +10,58 @@ from .prompt_parser import parse_ipam_prompt
 # Set up logger
 logger = logging.getLogger(__name__)
 
+
 class DynamicIPAMQuery(BaseQuery):
     """Dynamic IPAM query that replaces placeholders based on user input"""
-    
+
     def __init__(self):
         # Mapping of common incorrect/alternate field names to correct GraphQL field names
         self.field_mappings = {
             # Common aliases for address field
-            'ip': 'address',
-            'ip_address': 'address',
-            'ipaddress': 'address',
-            
+            "ip": "address",
+            "ip_address": "address",
+            "ipaddress": "address",
             # Common aliases for dns_name
-            'hostname': 'dns_name',
-            'host_name': 'dns_name',
-            'dns': 'dns_name',
-            'name': 'dns_name',  # Often confused with dns_name in IP context
-            
+            "hostname": "dns_name",
+            "host_name": "dns_name",
+            "dns": "dns_name",
+            "name": "dns_name",  # Often confused with dns_name in IP context
             # Common aliases for other fields
-            'state': 'status',
-            'ip_type': 'type',
-            'addr_type': 'type',
-            'version': 'ip_version',
-            'mask': 'mask_length',
-            'subnet_mask': 'mask_length',
-            'prefix_length': 'mask_length',
-            
+            "state": "status",
+            "ip_type": "type",
+            "addr_type": "type",
+            "version": "ip_version",
+            "mask": "mask_length",
+            "subnet_mask": "mask_length",
+            "prefix_length": "mask_length",
             # Common aliases for relationships
-            'device': 'primary_ip4_for',
-            'devices': 'primary_ip4_for',
-            'interface': 'interfaces',
-            'intf': 'interfaces',
-            'port': 'interfaces',
-            'tag': 'tags',
-            'label': 'tags',
-            'prefix': 'parent',
-            'subnet': 'parent',
-            'network': 'parent'
+            "device": "primary_ip4_for",
+            "devices": "primary_ip4_for",
+            "interface": "interfaces",
+            "intf": "interfaces",
+            "port": "interfaces",
+            "tag": "tags",
+            "label": "tags",
+            "prefix": "parent",
+            "subnet": "parent",
+            "network": "parent",
         }
-        
+
         # Valid GraphQL fields that can be used in ip_addresses query
         self.valid_fields = {
-            'address', 'dns_name', 'description', 'type', 'status', 'host', 
-            'mask_length', 'ip_version', 'tags', 'tenant', 'parent',
-            'interfaces', 'primary_ip4_for'
+            "address",
+            "dns_name",
+            "description",
+            "type",
+            "status",
+            "host",
+            "mask_length",
+            "ip_version",
+            "tags",
+            "tenant",
+            "parent",
+            "interfaces",
+            "primary_ip4_for",
         }
         self.base_query = """
     query IPaddresses (
@@ -334,38 +342,38 @@ class DynamicIPAMQuery(BaseQuery):
       }
     }"""
         super().__init__()
-    
+
     def get_tool_name(self) -> str:
         return "query_ipam_dynamic"
-    
+
     def get_description(self) -> str:
         return "Query IP addresses with dynamic filtering by any property (address, dns_name, type, status, etc.). Automatically maps common field aliases (hostname→dns_name, ip→address, etc.)"
-    
+
     def get_query_type(self) -> QueryType:
         return QueryType.GRAPHQL
-    
+
     def get_match_type(self) -> MatchType:
         return MatchType.EXACT
-    
+
     def get_queries(self) -> str:
         return self.base_query
-    
+
     def get_input_schema(self) -> ToolSchema:
         return ToolSchema(
             type="object",
             properties={
                 "prompt": {
                     "type": "string",
-                    "description": "Natural language query (e.g., 'show ip address 192.168.1.1', 'ip addresses with dns_name contains server')"
+                    "description": "Natural language query (e.g., 'show ip address 192.168.1.1', 'ip addresses with dns_name contains server')",
                 },
                 "variable_name": {
-                    "type": "string", 
-                    "description": "Manual: The IP address property to filter by (e.g., 'address', 'dns_name', 'type', 'status', 'cf_fieldname' for custom fields). Common aliases are automatically mapped: 'hostname' → 'dns_name', 'ip' → 'address', 'device' → 'primary_ip4_for', etc."
+                    "type": "string",
+                    "description": "Manual: The IP address property to filter by (e.g., 'address', 'dns_name', 'type', 'status', 'cf_fieldname' for custom fields). Common aliases are automatically mapped: 'hostname' → 'dns_name', 'ip' → 'address', 'device' → 'primary_ip4_for', etc.",
                 },
                 "variable_value": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Manual: The value(s) to filter by. For custom fields (cf_*), only the first value is used as a single string."
+                    "description": "Manual: The value(s) to filter by. For custom fields (cf_*), only the first value is used as a single string.",
                 },
                 "get_address": {"type": "boolean", "default": True},
                 "get_config_context": {"type": "boolean", "default": False},
@@ -392,60 +400,66 @@ class DynamicIPAMQuery(BaseQuery):
                 "get_status": {"type": "boolean", "default": False},
                 "get_tags": {"type": "boolean", "default": False},
                 "get_tenant": {"type": "boolean", "default": False},
-                "get_type": {"type": "boolean", "default": False}
+                "get_type": {"type": "boolean", "default": False},
             },
-            required=[]
+            required=[],
         )
-    
+
     def _is_custom_field(self, field_name: str) -> bool:
         """Check if the field name is a custom field (starts with cf_)"""
         return field_name.startswith("cf_")
-    
+
     def _map_field_name(self, field_name: str) -> str:
         """Map an alternate/incorrect field name to the correct GraphQL field name"""
         return self.field_mappings.get(field_name.lower(), field_name)
-    
+
     def _is_valid_field(self, field_name: str) -> bool:
         """Check if a field name is valid for IP address queries"""
         return field_name in self.valid_fields or self._is_custom_field(field_name)
-    
+
     def _suggest_field_name(self, invalid_field: str) -> str:
         """Suggest the correct field name for an invalid field"""
         invalid_lower = invalid_field.lower()
-        
+
         # Check if it's a known mapping
         if invalid_lower in self.field_mappings:
             return self.field_mappings[invalid_lower]
-        
+
         # Use fuzzy matching to suggest similar field names
         import difflib
-        
+
         # Find closest matches
-        matches = difflib.get_close_matches(invalid_lower, [f.lower() for f in self.valid_fields], n=3, cutoff=0.4)
-        
+        matches = difflib.get_close_matches(
+            invalid_lower, [f.lower() for f in self.valid_fields], n=3, cutoff=0.4
+        )
+
         if matches:
             return matches[0]
-        
+
         return "address"  # Default fallback
-    
+
     def _modify_query_for_custom_field(self, query: str, variable_name: str) -> str:
         """Modify query for custom fields - use String instead of [String]"""
         if self._is_custom_field(variable_name):
             # Replace [String] with String for custom fields
-            query = query.replace("$variable_value: [String],", "$variable_value: String,")
+            query = query.replace(
+                "$variable_value: [String],", "$variable_value: String,"
+            )
         return query
-    
+
     def _remove_filtering(self, query: str) -> str:
         """Remove the filtering clause from the query to fetch all records"""
         # Replace the filtered query with an unfiltered one
-        query = query.replace("ip_addresses(enter_variable_name_here: $variable_value)", "ip_addresses")
+        query = query.replace(
+            "ip_addresses(enter_variable_name_here: $variable_value)", "ip_addresses"
+        )
         # Remove the variable declaration
         query = query.replace("$variable_value: [String],", "")
         return query
-    
+
     def _execute_graphql(self, client, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Execute GraphQL query with dynamic variable replacement"""
-        
+
         # Check if we have a prompt to parse
         if "prompt" in arguments:
             parsed = parse_ipam_prompt(arguments["prompt"])
@@ -453,25 +467,30 @@ class DynamicIPAMQuery(BaseQuery):
             for key, value in parsed.items():
                 if key not in arguments or arguments[key] is None:
                     arguments[key] = value
-        
+
         # Check if this is a "show all" query
         if arguments.get("show_all"):
             query = self._remove_filtering(self.base_query)
             # Remove unnecessary arguments
-            filtered_args = {k: v for k, v in arguments.items() 
-                           if k not in ["variable_value", "variable_name", "show_all"]}
+            filtered_args = {
+                k: v
+                for k, v in arguments.items()
+                if k not in ["variable_value", "variable_name", "show_all"]
+            }
         else:
             # Get the variable name and value (either from prompt parsing or manual input)
             variable_name = arguments.get("variable_name")
             variable_value = arguments.get("variable_value")
-            
+
             if not variable_name or not variable_value:
-                raise ValueError("Either 'prompt' or both 'variable_name' and 'variable_value' must be provided")
-            
+                raise ValueError(
+                    "Either 'prompt' or both 'variable_name' and 'variable_value' must be provided"
+                )
+
             # Map field name if it's an alternate/incorrect name
             original_field_name = variable_name
             mapped_field_name = self._map_field_name(variable_name)
-            
+
             # Validate field name and provide suggestions if invalid
             if not self._is_valid_field(mapped_field_name):
                 suggested_field = self._suggest_field_name(original_field_name)
@@ -482,32 +501,36 @@ class DynamicIPAMQuery(BaseQuery):
                     f"Available fields: {', '.join(available_fields)}. "
                     f"For custom fields, use 'cf_fieldname' format."
                 )
-            
+
             # Log field mapping if it occurred
             if mapped_field_name != original_field_name:
-                logger.info(f"Mapped field '{original_field_name}' to '{mapped_field_name}'")
-            
+                logger.info(
+                    f"Mapped field '{original_field_name}' to '{mapped_field_name}'"
+                )
+
             # Use the mapped field name
             variable_name = mapped_field_name
-            
+
             # Start with the base query
             query = self.base_query
-            
+
             # Replace the main variable placeholder
             query = query.replace("enter_variable_name_here", variable_name)
-            
+
             # Handle custom fields - modify query to use String instead of [String]
             query = self._modify_query_for_custom_field(query, variable_name)
-            
+
             # For custom fields, ensure variable_value is a single string, not an array
-            if self._is_custom_field(variable_name) and isinstance(variable_value, list):
+            if self._is_custom_field(variable_name) and isinstance(
+                variable_value, list
+            ):
                 if len(variable_value) > 0:
                     # Take the first value for custom fields
                     arguments = arguments.copy()
-                    arguments['variable_value'] = variable_value[0]
-            
+                    arguments["variable_value"] = variable_value[0]
+
             filtered_args = arguments
-        
+
         # Log the complete query for debugging
         logger.info("=" * 80)
         logger.info("EXECUTING GRAPHQL QUERY:")
@@ -517,5 +540,5 @@ class DynamicIPAMQuery(BaseQuery):
         logger.info("WITH ARGUMENTS:")
         logger.info(filtered_args)
         logger.info("=" * 80)
-        
+
         return client.graphql_query(query, filtered_args)

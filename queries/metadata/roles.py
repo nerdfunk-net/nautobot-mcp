@@ -4,6 +4,7 @@ Get roles query module
 
 from ..base import SimpleGraphQLQuery
 
+
 class GetRolesQuery(SimpleGraphQLQuery):
     def __init__(self):
         query = """
@@ -12,7 +13,7 @@ class GetRolesQuery(SimpleGraphQLQuery):
                     name
                 }
             }"""
-        
+
         super().__init__(
             tool_name="get_roles",
             description="Get available device roles",
@@ -22,7 +23,7 @@ class GetRolesQuery(SimpleGraphQLQuery):
                 "role_filter": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Optional filter for specific role content types"
+                    "description": "Optional filter for specific role content types",
                 }
-            }
+            },
         )
