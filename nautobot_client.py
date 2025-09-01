@@ -77,6 +77,26 @@ class NautobotClient:
             logger.error(error_msg)
             raise Exception(error_msg)
     
+    def get_api_schema(self) -> Dict:
+        """Get the OpenAPI schema from Nautobot"""
+        try:
+            url = f"{self.base_url}/api/schema/"
+            logger.debug(f"Fetching API schema: {url}")
+            
+            response = requests.get(
+                url,
+                headers=self.headers,
+                timeout=30
+            )
+            response.raise_for_status()
+            
+            return response.json()
+            
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Schema request failed: {str(e)}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
+    
     def test_connection(self) -> bool:
         """Test the connection to Nautobot"""
         try:
