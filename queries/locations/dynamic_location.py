@@ -14,6 +14,74 @@ class DynamicLocationQuery(BaseQuery):
     """Dynamic location query that replaces placeholders based on user input"""
     
     def __init__(self):
+        # Mapping of common incorrect/alternate field names to correct GraphQL field names
+        self.field_mappings = {
+            # Common aliases for location name
+            'location': 'name',
+            'location_name': 'name',
+            'site': 'name',
+            'site_name': 'name',
+            
+            # Common aliases for parent
+            'parent_location': 'parent',
+            'parent_site': 'parent',
+            'region': 'parent',
+            'area': 'parent',
+            
+            # Common aliases for status
+            'state': 'status',
+            'condition': 'status',
+            
+            # Common aliases for tags
+            'tag': 'tags',
+            'label': 'tags',
+            'labels': 'tags',
+            
+            # Common aliases for tenant
+            'customer': 'tenant',
+            'organization': 'tenant',
+            'org': 'tenant',
+            
+            # Common aliases for address
+            'address': 'physical_address',
+            'street_address': 'physical_address',
+            'postal_address': 'physical_address',
+            
+            # Common aliases for coordinates
+            'lat': 'latitude',
+            'long': 'longitude',
+            'lng': 'longitude',
+            'coordinates': 'latitude',
+            
+            # Common aliases for racks
+            'rack': 'racks',
+            'cabinet': 'racks',
+            'cabinets': 'racks',
+            
+            # Common aliases for VLANs
+            'vlan': 'vlans',
+            'network': 'vlans',
+            'networks': 'vlans',
+            
+            # Common aliases for prefixes
+            'prefix': 'prefixes',
+            'subnet': 'prefixes',
+            'subnets': 'prefixes',
+            'ip_range': 'prefixes',
+            
+            # Common aliases for contact
+            'contact_person': 'contact',
+            'admin': 'contact',
+            'administrator': 'contact'
+        }
+        
+        # Valid GraphQL fields that can be used in locations query
+        self.valid_fields = {
+            'name', 'parent', 'status', 'tags', 'tenant', 'physical_address',
+            'latitude', 'longitude', 'racks', 'vlans', 'prefixes', 'contact',
+            'rack_groups', 'created', 'custom_field_data'
+        }
+        
         self.base_query = """
     query Locations(
         $get_id: Boolean = false,
@@ -97,7 +165,7 @@ class DynamicLocationQuery(BaseQuery):
         return "query_locations_dynamic"
     
     def get_description(self) -> str:
-        return "Query locations with dynamic filtering by any property (name, parent, tenant, status, etc.)"
+        return "Query locations with dynamic filtering by any property (name, parent, tenant, status, etc.). Automatically maps common field aliases (site→name, region→parent, address→physical_address, etc.)"
     
     def get_query_type(self) -> QueryType:
         return QueryType.GRAPHQL
@@ -118,7 +186,7 @@ class DynamicLocationQuery(BaseQuery):
                 },
                 "variable_name": {
                     "type": "string", 
-                    "description": "Manual: The location property to filter by (e.g., 'name', 'parent', 'tenant', 'status')"
+                    "description": "Manual: The location property to filter by (e.g., 'name', 'parent', 'tenant', 'status', 'cf_fieldname' for custom fields). Common aliases are automatically mapped: 'site' → 'name', 'region' → 'parent', 'address' → 'physical_address', etc."
                 },
                 "variable_value": {
                     "type": "array",
@@ -144,6 +212,37 @@ class DynamicLocationQuery(BaseQuery):
             },
             required=[]
         )
+    
+    def _is_custom_field(self, field_name: str) -> bool:
+        """Check if the field name is a custom field (starts with cf_)"""
+        return field_name.startswith("cf_")
+    
+    def _map_field_name(self, field_name: str) -> str:
+        """Map an alternate/incorrect field name to the correct GraphQL field name"""
+        return self.field_mappings.get(field_name.lower(), field_name)
+    
+    def _is_valid_field(self, field_name: str) -> bool:
+        """Check if a field name is valid for location queries"""
+        return field_name in self.valid_fields or self._is_custom_field(field_name)
+    
+    def _suggest_field_name(self, invalid_field: str) -> str:
+        """Suggest the correct field name for an invalid field"""
+        invalid_lower = invalid_field.lower()
+        
+        # Check if it's a known mapping
+        if invalid_lower in self.field_mappings:
+            return self.field_mappings[invalid_lower]
+        
+        # Use fuzzy matching to suggest similar field names
+        import difflib
+        
+        # Find closest matches
+        matches = difflib.get_close_matches(invalid_lower, [f.lower() for f in self.valid_fields], n=3, cutoff=0.4)
+        
+        if matches:
+            return matches[0]
+        
+        return "name"  # Default fallback for locations
     
     def _remove_filtering(self, query: str) -> str:
         """Remove the filtering clause from the query to fetch all records"""
@@ -177,6 +276,28 @@ class DynamicLocationQuery(BaseQuery):
             
             if not variable_name or not variable_value:
                 raise ValueError("Either 'prompt' or both 'variable_name' and 'variable_value' must be provided")
+            
+            # Map field name if it's an alternate/incorrect name
+            original_field_name = variable_name
+            mapped_field_name = self._map_field_name(variable_name)
+            
+            # Validate field name and provide suggestions if invalid
+            if not self._is_valid_field(mapped_field_name):
+                suggested_field = self._suggest_field_name(original_field_name)
+                available_fields = sorted(self.valid_fields)
+                raise ValueError(
+                    f"Invalid field name: '{original_field_name}'. "
+                    f"Did you mean '{suggested_field}'? "
+                    f"Available fields: {', '.join(available_fields)}. "
+                    f"For custom fields, use 'cf_fieldname' format."
+                )
+            
+            # Log field mapping if it occurred
+            if mapped_field_name != original_field_name:
+                logger.info(f"Mapped field '{original_field_name}' to '{mapped_field_name}'")
+            
+            # Use the mapped field name
+            variable_name = mapped_field_name
             
             # Start with the base query and replace the placeholder
             query = self.base_query

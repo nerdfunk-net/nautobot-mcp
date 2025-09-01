@@ -14,6 +14,47 @@ class DynamicIPAMQuery(BaseQuery):
     """Dynamic IPAM query that replaces placeholders based on user input"""
     
     def __init__(self):
+        # Mapping of common incorrect/alternate field names to correct GraphQL field names
+        self.field_mappings = {
+            # Common aliases for address field
+            'ip': 'address',
+            'ip_address': 'address',
+            'ipaddress': 'address',
+            
+            # Common aliases for dns_name
+            'hostname': 'dns_name',
+            'host_name': 'dns_name',
+            'dns': 'dns_name',
+            'name': 'dns_name',  # Often confused with dns_name in IP context
+            
+            # Common aliases for other fields
+            'state': 'status',
+            'ip_type': 'type',
+            'addr_type': 'type',
+            'version': 'ip_version',
+            'mask': 'mask_length',
+            'subnet_mask': 'mask_length',
+            'prefix_length': 'mask_length',
+            
+            # Common aliases for relationships
+            'device': 'primary_ip4_for',
+            'devices': 'primary_ip4_for',
+            'interface': 'interfaces',
+            'intf': 'interfaces',
+            'port': 'interfaces',
+            'tag': 'tags',
+            'label': 'tags',
+            'prefix': 'parent',
+            'subnet': 'parent',
+            'network': 'parent'
+        }
+        
+        # Valid GraphQL fields that can be used in ip_addresses query
+        self.valid_fields = {
+            'address', 'dns_name', 'description', 'type', 'status', 'host', 
+            'mask_length', 'ip_version', 'tags', 'tenant', 'parent',
+            'interfaces', 'primary_ip4_for'
+        }
         self.base_query = """
     query IPaddresses (
       $get_address: Boolean = false,
@@ -298,7 +339,7 @@ class DynamicIPAMQuery(BaseQuery):
         return "query_ipam_dynamic"
     
     def get_description(self) -> str:
-        return "Query IP addresses with dynamic filtering by any property (address, dns_name, type, status, etc.)"
+        return "Query IP addresses with dynamic filtering by any property (address, dns_name, type, status, etc.). Automatically maps common field aliases (hostname→dns_name, ip→address, etc.)"
     
     def get_query_type(self) -> QueryType:
         return QueryType.GRAPHQL
@@ -319,7 +360,7 @@ class DynamicIPAMQuery(BaseQuery):
                 },
                 "variable_name": {
                     "type": "string", 
-                    "description": "Manual: The IP address property to filter by (e.g., 'address', 'dns_name', 'type', 'status', 'cf_fieldname' for custom fields)"
+                    "description": "Manual: The IP address property to filter by (e.g., 'address', 'dns_name', 'type', 'status', 'cf_fieldname' for custom fields). Common aliases are automatically mapped: 'hostname' → 'dns_name', 'ip' → 'address', 'device' → 'primary_ip4_for', etc."
                 },
                 "variable_value": {
                     "type": "array",
@@ -360,6 +401,33 @@ class DynamicIPAMQuery(BaseQuery):
         """Check if the field name is a custom field (starts with cf_)"""
         return field_name.startswith("cf_")
     
+    def _map_field_name(self, field_name: str) -> str:
+        """Map an alternate/incorrect field name to the correct GraphQL field name"""
+        return self.field_mappings.get(field_name.lower(), field_name)
+    
+    def _is_valid_field(self, field_name: str) -> bool:
+        """Check if a field name is valid for IP address queries"""
+        return field_name in self.valid_fields or self._is_custom_field(field_name)
+    
+    def _suggest_field_name(self, invalid_field: str) -> str:
+        """Suggest the correct field name for an invalid field"""
+        invalid_lower = invalid_field.lower()
+        
+        # Check if it's a known mapping
+        if invalid_lower in self.field_mappings:
+            return self.field_mappings[invalid_lower]
+        
+        # Use fuzzy matching to suggest similar field names
+        import difflib
+        
+        # Find closest matches
+        matches = difflib.get_close_matches(invalid_lower, [f.lower() for f in self.valid_fields], n=3, cutoff=0.4)
+        
+        if matches:
+            return matches[0]
+        
+        return "address"  # Default fallback
+    
     def _modify_query_for_custom_field(self, query: str, variable_name: str) -> str:
         """Modify query for custom fields - use String instead of [String]"""
         if self._is_custom_field(variable_name):
@@ -399,6 +467,28 @@ class DynamicIPAMQuery(BaseQuery):
             
             if not variable_name or not variable_value:
                 raise ValueError("Either 'prompt' or both 'variable_name' and 'variable_value' must be provided")
+            
+            # Map field name if it's an alternate/incorrect name
+            original_field_name = variable_name
+            mapped_field_name = self._map_field_name(variable_name)
+            
+            # Validate field name and provide suggestions if invalid
+            if not self._is_valid_field(mapped_field_name):
+                suggested_field = self._suggest_field_name(original_field_name)
+                available_fields = sorted(self.valid_fields)
+                raise ValueError(
+                    f"Invalid field name: '{original_field_name}'. "
+                    f"Did you mean '{suggested_field}'? "
+                    f"Available fields: {', '.join(available_fields)}. "
+                    f"For custom fields, use 'cf_fieldname' format."
+                )
+            
+            # Log field mapping if it occurred
+            if mapped_field_name != original_field_name:
+                logger.info(f"Mapped field '{original_field_name}' to '{mapped_field_name}'")
+            
+            # Use the mapped field name
+            variable_name = mapped_field_name
             
             # Start with the base query
             query = self.base_query

@@ -40,6 +40,10 @@ from .prefixes import (
     DynamicPrefixQuery
 )
 
+from .device_types import (
+    DynamicDeviceTypeQuery
+)
+
 class QueryRegistry:
     """Central registry for all MCP queries"""
     
@@ -68,6 +72,9 @@ class QueryRegistry:
             
             # Prefix queries
             DynamicPrefixQuery,
+            
+            # Device Type queries
+            DynamicDeviceTypeQuery,
             
             # Metadata queries
             GetRolesQuery,
