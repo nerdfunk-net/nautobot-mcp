@@ -112,6 +112,11 @@ async def list_prompts() -> list:
                     required=True
                 )
             ]
+        ),
+        Prompt(
+            name="show-enabled-interfaces",
+            description="Show all interfaces that are enabled in Nautobot",
+            arguments=[]
         )
     ]
 
@@ -130,6 +135,8 @@ async def get_prompt(name: str, arguments: dict) -> str:
     elif name == "list-prefixes-within":
         prefix_cidr = arguments.get("prefix_cidr", "{prefix_cidr}")
         return f"List the prefixes that are includes in {prefix_cidr}"
+    elif name == "show-enabled-interfaces":
+        return "Show all interfaces that are enabled in nautobot."
     
     raise ValueError(f"Unknown prompt: {name}")
 

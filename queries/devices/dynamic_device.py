@@ -104,7 +104,6 @@ class DynamicDeviceQuery(BaseQuery):
       $get_local_config_context_data: Boolean = false,
       $get_location: Boolean = false,
       $get_location_parent: Boolean = false,
-      $get_name: Boolean = false,
       $get_parent_bay: Boolean = false,
       $get_primary_ip4: Boolean = false, 
       $get_platform: Boolean = false, 

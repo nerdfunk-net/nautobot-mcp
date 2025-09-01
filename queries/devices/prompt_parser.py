@@ -89,7 +89,7 @@ class DevicePromptParser:
     # Boolean fields to enable based on query content
     FIELD_ENABLERS = {
         'name': ['get_name'],
-        'hostname': ['get_hostname', 'get_name'],
+        'hostname': ['get_name'],
         'location': ['get_location'],
         'role': ['get_role'],
         'platform': ['get_platform'],
@@ -229,7 +229,6 @@ class DevicePromptParser:
         enabled = {}
         
         # Always enable hostname by default
-        enabled['get_hostname'] = True
         
         # Enable fields based on variable name
         if 'variable_name' in parsed_result:
@@ -249,7 +248,7 @@ class DevicePromptParser:
         if 'all properties' in prompt or 'show all' in prompt:
             # Enable most fields for comprehensive queries
             comprehensive_fields = [
-                'get_name', 'get_hostname', 'get_location', 'get_role',
+                'get_name', 'get_location', 'get_role',
                 'get_device_type', 'get_platform', 'get_status', 'get_tags'
             ]
             for field in comprehensive_fields:

@@ -1,15 +1,18 @@
 # Nautobot MCP Server
 
-A Model Context Protocol (MCP) server that provides Claude with tools to interact with Nautobot via GraphQL and REST APIs.
+A Model Context Protocol (MCP) server that provides Claude with powerful tools to interact with Nautobot using natural language queries and dynamic GraphQL filtering.
 
 ## Features
 
-- **10 MCP Tools** for device queries and metadata retrieval
-- **Modular Architecture** - easy to add new queries without code changes
-- **Combined matching** - exact and pattern matching for name/location queries
-- **Comprehensive logging** - errors logged and returned to user
-- **Testing utilities** - connection testing and interactive tool testing
-- **GraphQL & REST** - supports both Nautobot API types
+- **🤖 Natural Language Queries** - Use plain English to query your network infrastructure
+- **⚡ Dynamic Filtering** - Filter by any property with automatic field mapping and validation
+- **🔍 Advanced Search** - Supports lookup expressions (contains, starts with, regex, etc.)
+- **🛡️ Smart Validation** - Automatic field name mapping with helpful error suggestions
+- **📊 Multiple Resource Types** - Devices, locations, IP addresses, prefixes, device types, and more
+- **🎯 Custom Field Support** - Query custom fields with proper type handling
+- **📝 MCP Prompts** - Pre-configured prompt templates for common queries
+- **🔧 Modular Architecture** - Easy to extend with new resource types
+- **📋 Comprehensive Logging** - Detailed query execution and error information
 
 ## Quick Start
 
@@ -70,18 +73,35 @@ Add the following configuration to your Claude Desktop config file:
 
 ## Available Tools
 
+### 🚀 Dynamic Query Tools
+These tools support natural language prompts and advanced filtering:
+
+| Tool | Description | Example Prompts |
+|------|-------------|-----------------|
+| **`query_devices_dynamic`** | Query devices with dynamic filtering | `"show device router1"`, `"devices with name contains core"`, `"devices in location datacenter1"` |
+| **`query_locations_dynamic`** | Query locations with dynamic filtering | `"show location datacenter1"`, `"locations with status active"`, `"sites in region west"` |
+| **`query_ipam_dynamic`** | Query IP addresses with dynamic filtering | `"show ip address 192.168.1.1"`, `"ip addresses with dns_name contains server"`, `"addresses with cf_environment production"` |
+| **`query_prefixes_dynamic`** | Query network prefixes with dynamic filtering | `"show prefix 10.0.0.0/8"`, `"prefixes within 172.16.0.0/12"`, `"prefixes with length 24"` |
+| **`query_device_types_dynamic`** | Query device types with dynamic filtering | `"show all device types"`, `"device types with vendor cisco"`, `"models contains c9300"` |
+
+### 📊 Metadata Tools
 | Tool | Description | Parameters |
 |------|-------------|------------|
-| `devices_by_name` | Find devices by name | `name_filter`, `match_type` (exact/pattern) |
-| `devices_by_location` | Find devices by location | `location_filter`, `match_type` (exact/pattern) |
-| `devices_by_role` | Find devices by role | `role_filter` |
-| `devices_by_tag` | Find devices by tag | `tag_filter` |
-| `devices_by_devicetype` | Find devices by device type | `devicetype_filter` |
-| `devices_by_manufacturer` | Find devices by manufacturer | `manufacturer_filter` |
-| `devices_by_platform` | Find devices by platform | `platform_filter` |
-| `get_roles` | Get available device roles | `role_filter` (optional) |
-| `get_tags` | Get available tags | `tags_filter` (optional) |
-| `get_custom_fields` | Get custom field definitions | None |
+| **`get_roles`** | Get available device roles | `role_filter` (optional) |
+| **`get_tags`** | Get available tags | `tags_filter` (optional) |
+| **`get_custom_fields`** | Get custom field definitions | None |
+
+### 🎯 Legacy Query Tools
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `get_ip_addresses` | Get IP address information (filtered) | `address_filter`, `fields` |
+
+### ✨ Key Features of Dynamic Tools:
+- **🗣️ Natural Language**: Use plain English descriptions
+- **🔄 Field Mapping**: Common aliases automatically mapped (e.g., `hostname` → `name`, `site` → `location`)
+- **🔍 Lookup Expressions**: Advanced search with `__ic` (contains), `__isw` (starts with), `__re` (regex), etc.
+- **🛠️ Custom Fields**: Support for `cf_fieldname` custom field queries
+- **✅ Validation**: Helpful error messages with field suggestions
 
 ## Testing
 
@@ -139,22 +159,162 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"devices_by
 - GraphQL errors are parsed and returned with context
 - Network timeouts are configured (30s default)
 
-## Using with Claude Desktop
+## 🎯 Prompt Examples
 
-Once configured, you can use natural language to query your Nautobot instance:
+Once configured, you can use natural language to query your Nautobot instance with these example prompts:
 
-**Example prompts:**
-- "Show me all devices with 'switch' in the name"
-- "Find devices in the datacenter location"
-- "List all devices with the 'production' tag"
-- "What device roles are available?"
-- "Show me all Cisco devices"
+### 🖥️ Device Queries
+```
+"Show device router1"
+"Find all devices with name containing 'core'"
+"Show devices in location datacenter1" 
+"List devices with role firewall"
+"Show devices with hostname starts with 'sw-'"
+"Find devices where vendor is cisco"
+"Show all properties of device spine01"
+"Devices with status active in location lab"
+"Show devices with custom field cf_environment equal to production"
+```
 
-**Available tools will appear in Claude Desktop with descriptions:**
-- 🔧 devices_by_name - Find devices by name
-- 📍 devices_by_location - Find devices by location
-- 🏷️ devices_by_tag - Find devices by tag
-- And 7 more device query tools...
+### 📍 Location Queries
+```
+"Show location datacenter1"
+"Find locations with status active"
+"Show all sites in region west-coast"
+"List locations with name contains 'branch'"
+"Show sites with address containing 'New York'"
+"Find locations where tenant is customer1"
+```
+
+### 🌐 IP Address & Network Queries
+```
+"Show ip address 192.168.1.1"
+"Find IP addresses with dns_name contains 'server'"
+"Show addresses with status reserved"
+"List IP addresses with custom field cf_vrf production"
+"Find addresses assigned to device router1"
+"Show prefix 10.0.0.0/8"
+"List prefixes within 172.16.0.0/12"
+"Find prefixes with length 24"
+"Show prefixes in location datacenter1"
+```
+
+### 🔧 Device Type & Hardware Queries  
+```
+"Show all device types"
+"Find device types with vendor cisco"
+"Show models containing 'c9300'"
+"List device types with manufacturer juniper"
+"Show all catalyst models"
+```
+
+### 📊 Metadata Queries
+```
+"What device roles are available?"
+"Show all tags in the system"
+"List custom fields for devices"
+"Show available statuses"
+```
+
+### 🔍 Advanced Search Examples
+```
+"Show devices with name not equal to 'test'"
+"Find devices where location ends with '-dc'"  
+"List IP addresses with dns_name starts with 'web-'"
+"Show prefixes with description contains 'mgmt'"
+"Find device types where model regex matches 'c[0-9]+'"
+```
+
+### 💡 MCP Prompt Templates
+The server also provides pre-configured prompt templates accessible through Claude:
+- **Device Details**: "Show all properties of device {device_name}"
+- **Location Devices**: "Show the name and IP address of all devices in location {location_name}"
+- **IP Lookup**: "Where do I find the address {ip_address}?"
+- **Prefix Search**: "List the prefixes that are included in {prefix_cidr}"
+
+## 🛠️ Parameter Mapping & Validation
+
+The dynamic query system includes intelligent parameter mapping and validation to make queries more intuitive and error-resistant.
+
+### 🔄 Automatic Field Mapping
+
+Common field aliases are automatically mapped to their correct GraphQL field names:
+
+| Resource | Alias → Correct Field | Example |
+|----------|----------------------|---------|
+| **Devices** | `hostname` → `name` | `"devices with hostname router1"` |
+| | `site` → `location` | `"devices in site datacenter1"` |
+| | `vendor` → `device_type__manufacturer` | `"devices with vendor cisco"` |
+| | `ip` → `primary_ip4` | `"devices with ip 192.168.1.1"` |
+| **Locations** | `site` → `name` | `"show site headquarters"` |
+| | `region` → `parent` | `"locations in region west"` |
+| | `address` → `physical_address` | `"sites with address contains NYC"` |
+| **IP Addresses** | `hostname` → `dns_name` | `"ips with hostname web-server"` |
+| | `ip` → `address` | `"show ip 10.0.0.1"` |
+| **Device Types** | `vendor` → `manufacturer` | `"device types with vendor juniper"` |
+| | `name` → `model` | `"show device type c9300"` |
+
+### ✅ Smart Validation
+
+When an invalid field name is provided, the system offers helpful suggestions:
+
+**Example Error Response:**
+```
+Invalid field name: 'invalid_field'. 
+Did you mean 'name'? 
+Available fields: name, location, role, status, device_type, platform, tags, tenant, rack, serial, asset_tag, primary_ip4, interfaces. 
+For custom fields, use 'cf_fieldname' format.
+```
+
+**Fuzzy Matching**: The system uses intelligent fuzzy matching to suggest the most likely intended field:
+- `"loction"` → suggests `"location"`
+- `"manufacurer"` → suggests `"manufacturer"`  
+- `"addres"` → suggests `"address"`
+
+### 🎯 Custom Field Support
+
+Custom fields are automatically detected and handled with proper typing:
+
+**Standard Fields** (Arrays):
+```graphql
+$variable_value: [String]
+```
+
+**Custom Fields** (Single Values):
+```graphql  
+$variable_value: String
+```
+
+**Usage Examples**:
+```
+"devices with cf_environment production"
+"ip addresses with cf_vrf management"  
+"locations with cf_criticality high"
+```
+
+### 🔍 Validation Features
+
+1. **Field Existence**: Validates field names against available GraphQL fields
+2. **Type Safety**: Ensures proper parameter types (String vs Array)
+3. **Helpful Messages**: Provides specific suggestions and available options
+4. **Logging**: Logs field mappings for transparency and debugging
+
+**Example Field Mapping Log**:
+```
+INFO: Mapped field 'hostname' to 'name'
+INFO: Mapped field 'site' to 'location'  
+INFO: Mapped field 'vendor' to 'device_type__manufacturer'
+```
+
+### 💡 Best Practices
+
+1. **Use Natural Terms**: The system understands common network terminology
+2. **Custom Fields**: Always prefix with `cf_` (e.g., `cf_environment`) 
+3. **Case Insensitive**: Field mapping is case-insensitive
+4. **Check Logs**: Review logs to understand field mappings
+5. **Error Messages**: Read validation errors for specific guidance
+
+This intelligent mapping system makes the MCP server much more intuitive to use while maintaining the precision of GraphQL queries underneath.
 
 ## Troubleshooting
 
@@ -187,74 +347,145 @@ export PYTHONPATH="$PYTHONPATH:$(pwd)"
 NAUTOBOT_DEBUG=1 python mcp_server.py
 ```
 
-## Development
+## 🏗️ Architecture
 
-The server uses a **modular query system** that makes adding new queries simple. See `DEVELOPMENT.md` for detailed information.
+### Modern Dynamic Query System
+The server uses a **dynamic query registry** that supports natural language processing and advanced filtering:
 
-### Quick: Add a New Query
-```bash
-# Interactive generator
-python add_query.py interactive
-
-# Test your new query
-python test_queries.py all
-```
-
-### Testing Framework
-```bash
-# Test all components
-python test_queries.py all
-
-# Interactive testing
-python test_queries.py interactive
-
-# Test individual components  
-python test_queries.py registration
-python test_queries.py schemas
-python test_queries.py live
-```
-
-### Project Structure
 ```
 queries/
-├── base.py              # Base query classes
-├── devices/             # Device query modules  
-│   ├── by_name.py
-│   ├── by_location.py
-│   └── ...
-└── metadata/            # Metadata query modules
-    ├── roles.py
-    ├── tags.py
-    └── ...
+├── base.py                    # Base query classes and schemas
+├── devices/                   # Device queries
+│   ├── dynamic_device.py      # Dynamic device query with field mapping
+│   └── prompt_parser.py       # Natural language prompt parser
+├── locations/                 # Location queries  
+│   ├── dynamic_location.py    # Dynamic location query
+│   └── prompt_parser.py       # Location prompt parser
+├── ipam/                      # IP Address Management
+│   ├── dynamic_ipam.py        # Dynamic IP address query
+│   ├── filtered.py            # Legacy filtered query
+│   └── prompt_parser.py       # IPAM prompt parser
+├── prefixes/                  # Network prefixes
+│   ├── dynamic_prefix.py      # Dynamic prefix query
+│   └── prompt_parser.py       # Prefix prompt parser
+├── device_types/              # Device types
+│   ├── dynamic_device_type.py # Dynamic device type query
+│   └── prompt_parser.py       # Device type prompt parser
+├── statuses/                  # Status queries
+├── roles/                     # Role queries
+└── metadata/                  # System metadata
+    ├── roles.py               # Device roles
+    ├── tags.py                # Tags
+    └── custom_fields.py       # Custom field definitions
 ```
 
-### Adding New Queries (Manual)
-1. **Create query module** in `queries/devices/` or `queries/metadata/`
-2. **Inherit from base class** (`SimpleGraphQLQuery`, `CombinedMatchQuery`, or `BaseQuery`)
-3. **Update imports** in `queries/__init__.py`
-4. **Test** with `python test_queries.py interactive`
+### 🧩 Core Components
 
-Example:
+**1. Dynamic Query Classes**
+- **Field Mapping**: Automatic translation of common aliases (`hostname` → `name`, `site` → `location`)
+- **Validation**: Smart field validation with helpful suggestions
+- **Custom Fields**: Proper handling of `cf_*` fields with String vs Array types
+- **Lookup Expressions**: Support for advanced search operators
+
+**2. Prompt Parsers**
+- **Natural Language**: Convert English descriptions to structured queries
+- **Pattern Recognition**: Regex-based parsing for various query patterns
+- **Field Enablers**: Automatically enable relevant response fields based on context
+
+**3. Query Registry**
+- **Auto-Discovery**: Automatically registers all query classes
+- **Type Safety**: Validates query schemas and parameters
+- **Tool Generation**: Dynamically generates MCP tool definitions
+
+### 🔧 Adding New Resource Types
+
+1. **Create Directory Structure**:
+```bash
+mkdir queries/your_resource
+touch queries/your_resource/__init__.py
+```
+
+2. **Create Dynamic Query**:
 ```python
-# queries/devices/by_status.py
-from ..base import SimpleGraphQLQuery
+# queries/your_resource/dynamic_your_resource.py
+from ..base import BaseQuery, QueryType, MatchType, ToolSchema
 
-class DevicesByStatusQuery(SimpleGraphQLQuery):
+class DynamicYourResourceQuery(BaseQuery):
     def __init__(self):
-        super().__init__(
-            tool_name="devices_by_status",
-            description="Find devices by status",
-            query="query devices_by_status($status_filter: [String]) {...}",
-            required_params=["status_filter"]
-        )
+        self.field_mappings = {
+            'alias1': 'real_field1',
+            'alias2': 'real_field2'
+        }
+        self.valid_fields = {'field1', 'field2', 'field3'}
+        self.base_query = """
+        query YourResources($variable_value: [String]) {
+            your_resources(enter_variable_name_here: $variable_value) {
+                field1
+                field2
+            }
+        }"""
+        super().__init__()
 ```
 
-### Architecture
-- **Modular**: Each query is a separate module
-- **Type-safe**: Base classes with validation  
-- **Testable**: Comprehensive testing framework
-- **Extensible**: Easy to add new query types
+3. **Create Prompt Parser**:
+```python  
+# queries/your_resource/prompt_parser.py
+from typing import Dict, Any
 
-### Logging
-- Set `logging.basicConfig(level=logging.DEBUG)` for verbose output
-- Logs include query execution, errors, and connection status
+def parse_your_resource_prompt(prompt: str) -> Dict[str, Any]:
+    # Implement parsing logic
+    return {"variable_name": "field1", "variable_value": ["value"]}
+```
+
+4. **Register in Main Registry**:
+```python
+# queries/__init__.py
+from .your_resource import DynamicYourResourceQuery
+
+# Add to query_classes list in _initialize_queries()
+```
+
+### 🧪 Development & Testing
+
+```bash
+# Test connection
+python test_server.py connection
+
+# Test all tools interactively
+python test_server.py interactive
+
+# Run server for testing
+python mcp_server.py
+
+# Test with MCP Inspector
+npx @modelcontextprotocol/inspector python mcp_server.py
+```
+
+### 📝 Advanced Features
+
+**Field Mapping Examples**:
+```python
+'hostname' → 'name'                    # Simple alias
+'site' → 'location'                    # Common terminology
+'vendor' → 'device_type__manufacturer' # Nested field access
+'ip' → 'primary_ip4'                   # Field relationship
+```
+
+**Lookup Expression Support**:
+```python
+'name__ic'    # Contains (case-insensitive)
+'name__isw'   # Starts with (case-insensitive)  
+'name__iew'   # Ends with (case-insensitive)
+'name__re'    # Regular expression
+'name__n'     # Not equal
+'name__isnull' # Is null
+```
+
+**Custom Field Handling**:
+```python
+# Standard fields use [String] type
+"$variable_value: [String]"
+
+# Custom fields (cf_*) use String type  
+"$variable_value: String"
+```

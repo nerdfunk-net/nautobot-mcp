@@ -44,6 +44,18 @@ from .device_types import (
     DynamicDeviceTypeQuery
 )
 
+from .tags import (
+    DynamicTagQuery
+)
+
+from .manufacturers import (
+    DynamicManufacturerQuery
+)
+
+from .interfaces import (
+    DynamicInterfaceQuery
+)
+
 class QueryRegistry:
     """Central registry for all MCP queries"""
     
@@ -75,6 +87,15 @@ class QueryRegistry:
             
             # Device Type queries
             DynamicDeviceTypeQuery,
+            
+            # Tag queries
+            DynamicTagQuery,
+            
+            # Manufacturer queries
+            DynamicManufacturerQuery,
+            
+            # Interface queries
+            DynamicInterfaceQuery,
             
             # Metadata queries
             GetRolesQuery,
