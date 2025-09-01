@@ -2,7 +2,7 @@
 IPAM (IP Address Management) queries for Nautobot
 """
 
-from .customized import IPAddressesCustomizedQuery
+from .dynamic_ipam import DynamicIPAMQuery
 from .filtered import IPAddressesFilteredQuery
 
-__all__ = ['IPAddressesCustomizedQuery', 'IPAddressesFilteredQuery']
+__all__ = ['DynamicIPAMQuery', 'IPAddressesFilteredQuery']

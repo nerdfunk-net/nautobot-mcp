@@ -32,8 +32,12 @@ from .metadata import (
 )
 
 from .ipam import (
-    IPAddressesCustomizedQuery,
+    DynamicIPAMQuery,
     IPAddressesFilteredQuery
+)
+
+from .prefixes import (
+    DynamicPrefixQuery
 )
 
 class QueryRegistry:
@@ -59,8 +63,11 @@ class QueryRegistry:
             DynamicRoleQuery,
             
             # IPAM queries
-            IPAddressesCustomizedQuery,
+            DynamicIPAMQuery,
             IPAddressesFilteredQuery,
+            
+            # Prefix queries
+            DynamicPrefixQuery,
             
             # Metadata queries
             GetRolesQuery,

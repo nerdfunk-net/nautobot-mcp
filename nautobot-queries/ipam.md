@@ -3,7 +3,7 @@
 ## prompts
 - show {list_of_properties} of the ip address {address_filter}
 ## query
-    query IPaddresses_customized(
+    query IPaddresses (
       $get_address: Boolean = false,
       $get_config_context: Boolean = false, 
       $get_custom_field_data: Boolean = false,
@@ -30,10 +30,11 @@
       $get_tags: Boolean = false,
       $get_tenant: Boolean = false,
       $get_type: Boolean = false,
-      $address_filter: [String]
+      $address_filter: [String],
+      $variable_value: [String],
     ) 
     {
-      ip_addresses(address: $address_filter)
+      ip_addresses(enter_variable_name_here: $variable_value)
       {
         id @include(if: $get_id)
         address @include(if: $get_address)

@@ -308,7 +308,7 @@ class DynamicDeviceQuery(BaseQuery):
         return "query_devices_dynamic"
     
     def get_description(self) -> str:
-        return "Query devices with dynamic filtering by any property (name, location, role, etc.)"
+        return "Query devices with dynamic filtering by any property (name, location, role, etc.) with support for lookup expressions (__ic, __isw, __iew, __n, etc.)"
     
     def get_query_type(self) -> QueryType:
         return QueryType.GRAPHQL
@@ -325,11 +325,11 @@ class DynamicDeviceQuery(BaseQuery):
             properties={
                 "prompt": {
                     "type": "string",
-                    "description": "Natural language query (e.g., 'show device router1', 'devices in location datacenter1')"
+                    "description": "Natural language query (e.g., 'show device router1', 'devices with name contains router', 'devices with hostname starts with core')"
                 },
                 "variable_name": {
                     "type": "string", 
-                    "description": "Manual: The device property to filter by (e.g., 'name', 'location', 'role')"
+                    "description": "Manual: The device property to filter by with optional lookup expressions (e.g., 'name', 'name__ic', 'name__isw', 'location', 'role'). Supports: __n (not equal), __ic (contains), __nic (not contains), __isw (starts with), __nisw (not starts with), __iew (ends with), __niew (not ends with), __ie (exact case-insensitive), __nie (not exact case-insensitive), __re (regex), __nre (not regex), __ire (case-insensitive regex), __nire (not case-insensitive regex), __isnull (is null)"
                 },
                 "variable_value": {
                     "type": "array",

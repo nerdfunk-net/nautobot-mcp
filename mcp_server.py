@@ -90,6 +90,28 @@ async def list_prompts() -> list:
                     required=True
                 )
             ]
+        ),
+        Prompt(
+            name="find-ip-address",
+            description="Find where a specific IP address is used",
+            arguments=[
+                PromptArgument(
+                    name="ip_address",
+                    description="IP address to search for",
+                    required=True
+                )
+            ]
+        ),
+        Prompt(
+            name="list-prefixes-within",
+            description="List prefixes that are included within a specific CIDR block",
+            arguments=[
+                PromptArgument(
+                    name="prefix_cidr",
+                    description="CIDR block to search within and included (e.g., 10.0.0.0/8)",
+                    required=True
+                )
+            ]
         )
     ]
 
@@ -102,6 +124,12 @@ async def get_prompt(name: str, arguments: dict) -> str:
     elif name == "show-devices-in-location":
         location_name = arguments.get("location_name", "{location_name}")
         return f"show the name and the IP address of all devices in location {location_name}"
+    elif name == "find-ip-address":
+        ip_address = arguments.get("ip_address", "{ip_address}")
+        return f"Where do I find the address {ip_address}?"
+    elif name == "list-prefixes-within":
+        prefix_cidr = arguments.get("prefix_cidr", "{prefix_cidr}")
+        return f"List the prefixes that are includes in {prefix_cidr}"
     
     raise ValueError(f"Unknown prompt: {name}")
 
