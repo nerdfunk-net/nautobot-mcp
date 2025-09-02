@@ -1,175 +1,84 @@
 """
-Dynamic location query module that supports variable replacement
+Dynamic namespace query module that supports variable replacement
 """
 
 import logging
 from typing import Dict, Any
 from ..base import BaseQuery, QueryType, MatchType, ToolSchema
-from .prompt_parser import parse_location_prompt
+from .prompt_parser import parse_namespace_prompt
 from ..sanitizer import sanitize_query_input
 
 # Set up logger
 logger = logging.getLogger(__name__)
 
 
-class DynamicLocationQuery(BaseQuery):
-    """Dynamic location query that replaces placeholders based on user input"""
+class DynamicNamespaceQuery(BaseQuery):
+    """Dynamic namespace query that replaces placeholders based on user input"""
 
     def __init__(self):
         # Mapping of common incorrect/alternate field names to correct GraphQL field names
         self.field_mappings = {
-            # Common aliases for location name
-            "location": "name",
-            "location_name": "name",
-            "site": "name",
-            "site_name": "name",
-            # Common aliases for parent
-            "parent_location": "parent",
-            "parent_site": "parent",
-            "region": "parent",
-            "area": "parent",
-            # Common aliases for status
-            "state": "status",
-            "condition": "status",
+            # Common aliases for namespace name
+            "namespace": "name",
+            "namespace_name": "name",
+            "ns": "name",
+            "space": "name",
+            # Common aliases for description
+            "desc": "description",
+            "summary": "description",
+            "note": "description",
+            "comment": "description",
+            # Common aliases for location
+            "site": "location",
+            "datacenter": "location",
+            "facility": "location",
             # Common aliases for tags
             "tag": "tags",
             "label": "tags",
             "labels": "tags",
-            # Common aliases for tenant
-            "customer": "tenant",
-            "organization": "tenant",
-            "org": "tenant",
-            # Common aliases for address
-            "address": "physical_address",
-            "street_address": "physical_address",
-            "postal_address": "physical_address",
-            # Common aliases for coordinates
-            "lat": "latitude",
-            "long": "longitude",
-            "lng": "longitude",
-            "coordinates": "latitude",
-            # Common aliases for racks
-            "rack": "racks",
-            "cabinet": "racks",
-            "cabinets": "racks",
-            # Common aliases for VLANs
-            "vlan": "vlans",
-            "network": "vlans",
-            "networks": "vlans",
-            # Common aliases for prefixes
-            "prefix": "prefixes",
-            "subnet": "prefixes",
-            "subnets": "prefixes",
-            "ip_range": "prefixes",
-            # Common aliases for contact
-            "contact_person": "contact",
-            "admin": "contact",
-            "administrator": "contact",
         }
 
-        # Valid GraphQL fields that can be used in locations query
+        # Valid GraphQL fields that can be used in namespaces query
         self.valid_fields = {
             "name",
-            "parent",
-            "status",
+            "description", 
+            "location",
             "tags",
-            "tenant",
-            "physical_address",
-            "latitude",
-            "longitude",
-            "racks",
-            "vlans",
-            "prefixes",
-            "contact",
-            "rack_groups",
             "created",
             "custom_field_data",
         }
 
         self.base_query = """
-    query Locations(
+    query Namespaces(
         $get_id: Boolean = false,
-        $get_name: Boolean = true,
-        $get_parent: Boolean = false,
+        $get_description: Boolean = false,
+        $get_location: Boolean = false,
         $get_tags: Boolean = false,
-        $get_racks: Boolean = false,
-        $get_rack_groups: Boolean = false,
-        $get_contact: Boolean = false,
-        $get_vlans: Boolean = false,
-        $get_status: Boolean = false,
-        $get_tenant: Boolean = false,
-        $get_prefix: Boolean = false,
-        $get_latitude: Boolean = false,
-        $get_created: Boolean = false,
-        $get_custom_field_data: Boolean = false,
-        $get_physical_address: Boolean = false,
-        $get_shipping_address: Boolean = false,
         $variable_value: [String],
         ) 
     {
-      locations (enter_variable_name_here: $variable_value) 
+      namespaces (enter_variable_name_here: $variable_value) 
       {
         id @include(if: $get_id)
-        name @include(if: $get_name)
-        associated_contacts {
-          id @include(if: $get_id)
-          contact @include(if: $get_contact)  {
+        name
+        description @include(if: $get_description)
+        location @include(if: $get_location) {
             id @include(if: $get_id)
-          }
-        }
-        parent @include(if: $get_parent) {
-          name
+            name
         }
         tags @include(if: $get_tags) {
-          id
-        }
-        racks @include(if: $get_racks) {
-          id @include(if: $get_id)
-          name
-        }
-        rack_groups @include(if: $get_rack_groups) {
-          id  @include(if: $get_id)
-          name
-          parent {
-            id
-          }
-        }
-        vlans @include(if: $get_vlans) {
-          id @include(if: $get_id)
-          name
-          vid
-          vlan_group {
             id @include(if: $get_id)
-          }
+            name
         }
-        status @include(if: $get_status) {
-          id @include(if: $get_id)
-          name
-        }
-        tenant @include(if: $get_tenant) {
-          id @include(if: $get_id)
-          name
-        }
-        prefix_assignments @include(if: $get_prefix)  {
-          id @include(if: $get_id)
-          prefix {
-            id
-          }
-        }
-        latitude @include(if: $get_latitude)
-        created @include(if: $get_created)
-        _custom_field_data @include(if: $get_custom_field_data)
-        physical_address @include(if: $get_physical_address)
-        shipping_address @include(if: $get_shipping_address)
       }
     }"""
         super().__init__()
 
     def get_tool_name(self) -> str:
-        return "query_locations_dynamic"
+        return "query_namespaces_dynamic"
 
     def get_description(self) -> str:
-        return "Query locations with dynamic filtering by any property (name, parent, tenant, status, etc.). Automatically maps common field aliases (site→name, region→parent, address→physical_address, etc.)"
+        return "Query namespaces with dynamic filtering by any property (name, description, location, tags). Automatically maps common field aliases (namespace→name, desc→description, site→location, etc.)"
 
     def get_query_type(self) -> QueryType:
         return QueryType.GRAPHQL
@@ -186,11 +95,11 @@ class DynamicLocationQuery(BaseQuery):
             properties={
                 "prompt": {
                     "type": "string",
-                    "description": "Natural language query (e.g., 'show location datacenter1', 'locations with status active')",
+                    "description": "Natural language query (e.g., 'show namespace Global', 'namespaces with description production', 'show all namespaces')",
                 },
                 "variable_name": {
                     "type": "string",
-                    "description": "Manual: The location property to filter by (e.g., 'name', 'parent', 'tenant', 'status', 'cf_fieldname' for custom fields). Common aliases are automatically mapped: 'site' → 'name', 'region' → 'parent', 'address' → 'physical_address', etc.",
+                    "description": "Manual: The namespace property to filter by (e.g., 'name', 'description', 'location', 'tags', 'cf_fieldname' for custom fields). Common aliases are automatically mapped: 'namespace' → 'name', 'desc' → 'description', 'site' → 'location', etc.",
                 },
                 "variable_value": {
                     "type": "array",
@@ -198,21 +107,9 @@ class DynamicLocationQuery(BaseQuery):
                     "description": "Manual: The value(s) to filter by",
                 },
                 "get_id": {"type": "boolean", "default": False},
-                "get_name": {"type": "boolean", "default": True},
-                "get_parent": {"type": "boolean", "default": False},
+                "get_description": {"type": "boolean", "default": False},
+                "get_location": {"type": "boolean", "default": False},
                 "get_tags": {"type": "boolean", "default": False},
-                "get_racks": {"type": "boolean", "default": False},
-                "get_rack_groups": {"type": "boolean", "default": False},
-                "get_contact": {"type": "boolean", "default": False},
-                "get_vlans": {"type": "boolean", "default": False},
-                "get_status": {"type": "boolean", "default": False},
-                "get_tenant": {"type": "boolean", "default": False},
-                "get_prefix": {"type": "boolean", "default": False},
-                "get_latitude": {"type": "boolean", "default": False},
-                "get_created": {"type": "boolean", "default": False},
-                "get_custom_field_data": {"type": "boolean", "default": False},
-                "get_physical_address": {"type": "boolean", "default": False},
-                "get_shipping_address": {"type": "boolean", "default": False},
             },
             required=[],
         )
@@ -226,7 +123,7 @@ class DynamicLocationQuery(BaseQuery):
         return self.field_mappings.get(field_name.lower(), field_name)
 
     def _is_valid_field(self, field_name: str) -> bool:
-        """Check if a field name is valid for location queries"""
+        """Check if a field name is valid for namespace queries"""
         return field_name in self.valid_fields or self._is_custom_field(field_name)
 
     def _suggest_field_name(self, invalid_field: str) -> str:
@@ -248,13 +145,13 @@ class DynamicLocationQuery(BaseQuery):
         if matches:
             return matches[0]
 
-        return "name"  # Default fallback for locations
+        return "name"  # Default fallback for namespaces
 
     def _remove_filtering(self, query: str) -> str:
         """Remove the filtering clause from the query to fetch all records"""
         # Replace the filtered query with an unfiltered one
         query = query.replace(
-            "locations (enter_variable_name_here: $variable_value)", "locations"
+            "namespaces (enter_variable_name_here: $variable_value)", "namespaces"
         )
         # Remove the variable declaration
         query = query.replace("$variable_value: [String],", "")
@@ -265,7 +162,7 @@ class DynamicLocationQuery(BaseQuery):
 
         # Check if we have a prompt to parse
         if "prompt" in arguments:
-            parsed = parse_location_prompt(arguments["prompt"])
+            parsed = parse_namespace_prompt(arguments["prompt"])
             # Merge parsed parameters with existing arguments
             for key, value in parsed.items():
                 if key not in arguments or arguments[key] is None:
@@ -291,7 +188,7 @@ class DynamicLocationQuery(BaseQuery):
                 )
 
             # Sanitize the input value
-            if not sanitize_query_input("location", variable_value):
+            if not sanitize_query_input("namespace", variable_value):
                 raise ValueError(
                     f"Invalid or potentially malicious input detected: {variable_value}"
                 )

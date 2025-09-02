@@ -75,6 +75,22 @@ class NautobotClient:
             logger.error(error_msg)
             raise Exception(error_msg)
 
+    def rest_post(self, endpoint: str, data: Dict[str, Any]) -> Dict:
+        """Execute a REST POST request against Nautobot"""
+        try:
+            url = f"{self.base_url}{endpoint}"
+            logger.debug(f"Executing REST POST: {url}")
+
+            response = requests.post(url, json=data, headers=self.headers, timeout=30)
+            response.raise_for_status()
+
+            return response.json()
+
+        except requests.exceptions.RequestException as e:
+            error_msg = f"REST POST request failed: {str(e)}"
+            logger.error(error_msg)
+            raise Exception(error_msg)
+
     def test_connection(self) -> bool:
         """Test the connection to Nautobot"""
         try:

@@ -6,6 +6,7 @@ from typing import Dict, Any, Optional
 from difflib import get_close_matches
 from ..base import BaseQuery, QueryType, MatchType, ToolSchema
 from .prompt_parser import parse_interface_prompt
+from ..sanitizer import sanitize_query_input
 
 
 class DynamicInterfaceQuery(BaseQuery):
@@ -282,6 +283,10 @@ class DynamicInterfaceQuery(BaseQuery):
                 )
                 # Remove variable_value from variables since we're not using it
             else:
+                # Sanitize the input value
+                if not sanitize_query_input("interface", variable_value):
+                    return {"error": f"Invalid or potentially malicious input detected: {variable_value}"}
+                
                 # Validate field name
                 validated_field, error_msg = self._validate_field_name(variable_name)
                 if error_msg:

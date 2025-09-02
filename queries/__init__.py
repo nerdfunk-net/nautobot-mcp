@@ -31,6 +31,10 @@ from .manufacturers import DynamicManufacturerQuery
 
 from .interfaces import DynamicInterfaceQuery
 
+from .namespaces import DynamicNamespaceQuery
+
+from .secrets_groups import DynamicSecretsGroupQuery
+
 
 class QueryRegistry:
     """Central registry for all MCP queries"""
@@ -63,6 +67,10 @@ class QueryRegistry:
             DynamicManufacturerQuery,
             # Interface queries
             DynamicInterfaceQuery,
+            # Namespace queries
+            DynamicNamespaceQuery,
+            # Secrets groups queries
+            DynamicSecretsGroupQuery,
             # Metadata queries
             GetRolesQuery,
             GetTagsQuery,

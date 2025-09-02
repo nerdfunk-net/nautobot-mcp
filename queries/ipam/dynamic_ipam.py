@@ -6,6 +6,7 @@ import logging
 from typing import Dict, Any
 from ..base import BaseQuery, QueryType, MatchType, ToolSchema
 from .prompt_parser import parse_ipam_prompt
+from ..sanitizer import sanitize_query_input
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -485,6 +486,12 @@ class DynamicIPAMQuery(BaseQuery):
             if not variable_name or not variable_value:
                 raise ValueError(
                     "Either 'prompt' or both 'variable_name' and 'variable_value' must be provided"
+                )
+
+            # Sanitize the input value
+            if not sanitize_query_input("ipam", variable_value):
+                raise ValueError(
+                    f"Invalid or potentially malicious input detected: {variable_value}"
                 )
 
             # Map field name if it's an alternate/incorrect name
