@@ -85,7 +85,7 @@ async def call_tool(name: str, arguments: dict) -> List[TextContent]:
 
         if name == "query_rest_api_fallback" and rest_fallback_handler:
             return await rest_fallback_handler.handle(arguments)
-            
+
         if name == "onboard_device" and onboard_handler:
             return await onboard_handler.handle(arguments)
 
@@ -138,25 +138,19 @@ def _format_device_details_response(result) -> List[TextContent]:
         if devices:
             summary_lines = [f"Found {len(devices)} device(s):"]
             for device in devices:
-                device_info = [
-                    device.get("hostname", device.get("name", "Unknown"))
-                ]
+                device_info = [device.get("hostname", device.get("name", "Unknown"))]
                 if "status" in device:
                     device_info.append(f"Status: {device['status']['name']}")
                 if "role" in device:
                     device_info.append(f"Role: {device['role']['name']}")
                 if "interfaces" in device:
-                    device_info.append(
-                        f"Interfaces: {len(device['interfaces'])}"
-                    )
+                    device_info.append(f"Interfaces: {len(device['interfaces'])}")
                 summary_lines.append(" - " + " | ".join(device_info))
 
             return [TextContent(type="text", text="\n".join(summary_lines))]
         else:
             return [
-                TextContent(
-                    type="text", text="No devices found matching the criteria."
-                )
+                TextContent(type="text", text="No devices found matching the criteria.")
             ]
     elif "error" in result:
         return [TextContent(type="text", text=f"Error: {result['error']}")]

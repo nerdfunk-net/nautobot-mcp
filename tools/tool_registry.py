@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 class ToolRegistry:
     """Registry for MCP tools and prompts"""
-    
-    @staticmethod 
+
+    @staticmethod
     def get_all_tools() -> List[Tool]:
         """Dynamically generate MCP tools from query registry"""
         tools = []
@@ -133,7 +133,7 @@ class ToolRegistry:
         except Exception as e:
             logger.error(f"Failed to list tools: {str(e)}")
             return []
-    
+
     @staticmethod
     def get_all_prompts() -> List[Prompt]:
         """List available prompt templates"""
@@ -188,7 +188,7 @@ class ToolRegistry:
                 arguments=[],
             ),
         ]
-    
+
     @staticmethod
     def generate_prompt_content(name: str, arguments: dict) -> str:
         """Generate prompt content based on template and arguments"""

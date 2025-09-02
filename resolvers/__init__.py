@@ -11,11 +11,11 @@ from .platform_resolver import PlatformResolver
 from .secrets_group_resolver import SecretsGroupResolver
 
 __all__ = [
-    'BaseResolver',
-    'LocationResolver',
-    'NamespaceResolver', 
-    'RoleResolver',
-    'StatusResolver',
-    'PlatformResolver',
-    'SecretsGroupResolver'
+    "BaseResolver",
+    "LocationResolver",
+    "NamespaceResolver",
+    "RoleResolver",
+    "StatusResolver",
+    "PlatformResolver",
+    "SecretsGroupResolver",
 ]

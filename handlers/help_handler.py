@@ -9,7 +9,7 @@ from queries import get_all_queries
 
 class HelpHandler:
     """Handler for the help_find_query tool"""
-    
+
     @staticmethod
     async def handle(arguments: dict) -> List[TextContent]:
         """Help find the right query tool based on search intent"""
@@ -108,7 +108,14 @@ class HelpHandler:
                 ],
             },
             # Secrets groups
-            ("secret", "secrets", "secret group", "secrets group", "auth group", "credential"): {
+            (
+                "secret",
+                "secrets",
+                "secret group",
+                "secrets group",
+                "auth group",
+                "credential",
+            ): {
                 "tool": "query_secrets_groups_dynamic",
                 "description": "Use this to find secrets groups, authentication groups, or credential groups",
                 "examples": [
@@ -144,9 +151,7 @@ class HelpHandler:
                 response += f"**{tool_name}**\n"
                 response += f"  {query.description}\n\n"
 
-            response += (
-                "You can also describe what you're looking for more specifically, like:\n"
-            )
+            response += "You can also describe what you're looking for more specifically, like:\n"
             response += "- 'find devices' → query_devices_dynamic\n"
             response += "- 'show interfaces' → query_interfaces_dynamic\n"
             response += "- 'get IP addresses' → query_ipam_dynamic\n"

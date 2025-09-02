@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 
 class RestFallbackHandler:
     """Handler for REST API fallback queries"""
-    
+
     def __init__(self, client):
         self.client = client
-    
+
     async def handle(self, arguments: dict) -> List[TextContent]:
         """Handle REST API fallback queries for resources not covered by GraphQL queries"""
         search_description = arguments.get("search_description", "").lower()
@@ -74,9 +74,7 @@ class RestFallbackHandler:
 
         if not endpoint:
             # If no specific endpoint found, try to suggest alternatives
-            response = (
-                f"I couldn't find a specific API endpoint for '{search_description}'.\n\n"
-            )
+            response = f"I couldn't find a specific API endpoint for '{search_description}'.\n\n"
             response += "Available REST API categories include:\n"
             response += "- **Circuits**: circuit-types, circuits, providers\n"
             response += "- **DCIM**: cables, racks, power-panels, console-ports\n"
@@ -120,7 +118,13 @@ class RestFallbackHandler:
                         response += f"{display_name}**\n"
 
                         # Add key details
-                        key_fields = ["description", "status", "type", "location", "role"]
+                        key_fields = [
+                            "description",
+                            "status",
+                            "type",
+                            "location",
+                            "role",
+                        ]
                         details = []
                         for field in key_fields:
                             if field in item and item[field]:
@@ -149,7 +153,9 @@ class RestFallbackHandler:
             return [TextContent(type="text", text=response)]
 
         except Exception as e:
-            error_response = f"Error querying REST API endpoint `{endpoint}`: {str(e)}\n\n"
+            error_response = (
+                f"Error querying REST API endpoint `{endpoint}`: {str(e)}\n\n"
+            )
             error_response += "This could mean:\n"
             error_response += "1. The endpoint doesn't exist\n"
             error_response += "2. You don't have permission to access it\n"
